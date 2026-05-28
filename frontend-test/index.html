@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Lightning Wallet - Test</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #0a0f1a; color: #e2e8f0; min-height: 100vh; }
+.container { max-width: 900px; margin: 0 auto; padding: 20px; }
+header { background: linear-gradient(135deg, #1a2332, #0d1421); padding: 30px; border-radius: 16px; margin-bottom: 24px; border: 1px solid #2d3748; text-align: center; }
+header h1 { font-size: 28px; background: linear-gradient(90deg, #f59e0b, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+header p { color: #94a3b8; margin-top: 8px; }
+.badge { display: inline-block; background: #1e293b; color: #f59e0b; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-top: 8px; border: 1px solid #f59e0b33; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.card { background: #141c2b; border-radius: 12px; padding: 20px; border: 1px solid #1e293b; }
+.card h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #f59e0b; margin-bottom: 14px; }
+.card h3 { font-size: 16px; margin-bottom: 12px; color: #e2e8f0; }
+input { width: 100%; padding: 10px 14px; background: #0a0f1a; border: 1px solid #2d3748; border-radius: 8px; color: #e2e8f0; font-size: 14px; margin-bottom: 8px; transition: border .2s; }
+input:focus { outline: none; border-color: #f59e0b; }
+input::placeholder { color: #4a5568; }
+.row { display: flex; gap: 8px; }
+.row input { flex: 1; }
+button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all .2s; }
+.btn-primary { background: #f59e0b; color: #0a0f1a; }
+.btn-primary:hover { background: #d97706; }
+.btn-secondary { background: #1e293b; color: #e2e8f0; }
+.btn-secondary:hover { background: #2d3748; }
+.btn-danger { background: #dc2626; color: white; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.full { grid-column: 1 / -1; }
+pre { background: #0a0f1a; padding: 14px; border-radius: 8px; font-size: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; border: 1px solid #1e293b; color: #a5d6ff; margin-top: 8px; max-height: 200px; overflow-y: auto; }
+pre.error { color: #fca5a5; border-color: #7f1d1d; }
+pre.success { color: #86efac; border-color: #14532d; }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.status-dot.online { background: #22c55e; }
+.status-dot.offline { background: #ef4444; }
+.tabs { display: flex; gap: 4px; background: #0a0f1a; padding: 4px; border-radius: 8px; margin-bottom: 16px; }
+.tab { padding: 8px 16px; border-radius: 6px; cursor: pointer; border: none; background: transparent; color: #64748b; font-size: 13px; transition: all .2s; }
+.tab.active { background: #1e293b; color: #f59e0b; }
+.tab:hover { color: #e2e8f0; }
+.panel { display: none; }
+.panel.active { display: block; }
+.user-info { display: flex; align-items: center; justify-content: space-between; background: #0a0f1a; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+.user-info .balance { font-size: 24px; font-weight: 700; color: #f59e0b; }
+.user-info .label { font-size: 12px; color: #64748b; }
+.logout-btn { background: none; border: 1px solid #2d3748; color: #94a3b8; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.logout-btn:hover { border-color: #dc2626; color: #dc2626; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; padding: 8px 6px; border-bottom: 1px solid #1e293b; }
+td { padding: 10px 6px; border-bottom: 1px solid #1e293b; }
+tr:hover td { background: #1a2332; }
+td.amount { font-weight: 700; font-variant-numeric: tabular-nums; }
+td.amount.positive { color: #22c55e; }
+td.amount.negative { color: #ef4444; }
+td.amount.neutral { color: #e2e8f0; }
+.badge-pill { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-completed { background: #0f2e18; color: #3fb950; }
+.badge-pending { background: #1f2937; color: #f0b429; }
+.badge-failed { background: #2d1b1b; color: #f85149; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-item { background: #0a0f1a; padding: 10px 12px; border-radius: 8px; }
+.stat-item .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+.stat-item .stat-value { font-size: 18px; font-weight: 700; color: #e2e8f0; margin-top: 2px; word-break: break-all; }
+.stat-item.full { grid-column: 1 / -1; }
+.stat-item .stat-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⚡ Lightning Wallet</h1>
+    <p>Interface de test pour le hackathon</p>
+    <span class="badge" id="statusBadge">● Vérification...</span>
+  </header>
+
+  <div id="loginSection" class="grid">
+    <div class="card">
+      <h2>📝 Inscription</h2>
+      <input type="text" id="regUsername" placeholder="Nom d'utilisateur" value="test_">
+      <input type="email" id="regEmail" placeholder="Email" value="">
+      <input type="password" id="regPassword" placeholder="Mot de passe" value="Pass123!">
+      <button class="btn-primary" onclick="register()">S'inscrire</button>
+      <pre id="regResult"></pre>
+    </div>
+    <div class="card">
+      <h2>🔑 Connexion</h2>
+      <input type="email" id="loginEmail" placeholder="Email" value="">
+      <input type="password" id="loginPassword" placeholder="Mot de passe" value="Pass123!">
+      <button class="btn-primary" onclick="login()">Se connecter</button>
+      <pre id="loginResult"></pre>
+    </div>
+  </div>
+
+  <div id="appSection" style="display:none">
+    <div class="user-info">
+      <div>
+        <div id="displayUsername" style="font-weight:600"></div>
+        <div class="label">Solde disponible</div>
+        <div class="balance" id="displayBalance">0</div>
+      </div>
+      <div>
+        <button class="btn-secondary btn-sm" onclick="refreshMe()" style="margin-right:8px">🔄</button>
+        <button class="logout-btn" onclick="logout()">Déconnexion</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="invoices">Factures</button>
+      <button class="tab" data-tab="transfer">Transfert</button>
+      <button class="tab" data-tab="history">Historique</button>
+      <button class="tab" data-tab="lnd">LND</button>
+    </div>
+
+    <div id="invoices" class="panel active">
+      <div class="grid">
+        <div class="card">
+          <h2>💰 Demander un paiement</h2>
+          <input type="number" id="invAmount" placeholder="Montant en sats" value="1000">
+          <input type="text" id="invDesc" placeholder="Description" value="Test facture">
+          <button class="btn-primary" onclick="requestPayment()">Générer la facture</button>
+          <pre id="invResult"></pre>
+          <div id="qrSection" style="display:none; margin-top:12px; text-align:center">
+            <p style="font-size:12px; color:#94a3b8; margin-bottom:8px">📱 Scanner pour payer avec le mobile</p>
+            <img id="qrImg" style="width:180px; height:180px; border-radius:8px; background:white; padding:8px; cursor:pointer;" onclick="copyPayUrl()" title="Copier le lien">
+            <p style="font-size:11px; color:#64748b; margin-top:6px" id="qrHint">Toucher pour copier le lien</p>
+          </div>
+        </div>
+        <div class="card">
+          <h2>📋 Payer une facture</h2>
+          <input type="text" id="payBolt11" placeholder="BOLT11 (lnbc...)" value="">
+          <button class="btn-primary" onclick="sendPayment()">Payer</button>
+          <pre id="payResult"></pre>
+        </div>
+      </div>
+    </div>
+
+    <div id="transfer" class="panel">
+      <div class="grid">
+        <div class="card">
+          <h2>🔄 Transfert interne</h2>
+          <input type="text" id="transferTo" placeholder="Nom d'utilisateur destinataire">
+          <input type="number" id="transferAmount" placeholder="Montant en sats" value="100">
+          <button class="btn-primary" onclick="transfer()">Transférer</button>
+          <pre id="transferResult"></pre>
+        </div>
+        <div class="card">
+          <h2>🔍 Vérifier un paiement</h2>
+          <input type="number" id="checkPaymentId" placeholder="ID du paiement">
+          <button class="btn-secondary" onclick="checkPayment()">Vérifier</button>
+          <pre id="checkResult"></pre>
+        </div>
+      </div>
+    </div>
+
+    <div id="history" class="panel full">
+      <div class="card">
+        <h2>📜 Historique des transactions</h2>
+        <div class="row" style="margin-bottom:12px">
+          <button class="btn-secondary btn-sm" onclick="getHistory()">🔄 Rafraîchir</button>
+          <span id="historyCount" style="color:#64748b;font-size:13px;align-self:center"></span>
+        </div>
+        <div id="historyResult"></div>
+      </div>
+    </div>
+
+    <div id="lnd" class="panel">
+      <div class="grid">
+        <div class="card">
+          <h2>⚡ Infos du nœud</h2>
+          <button class="btn-secondary btn-sm" onclick="lndGetInfo()" style="margin-bottom:8px">🔄 Récupérer</button>
+          <div id="lndInfoResult"></div>
+        </div>
+        <div class="card">
+          <h2>📊 Soldes</h2>
+          <button class="btn-secondary btn-sm" onclick="lndBalance()" style="margin-bottom:8px">🔄 Récupérer</button>
+          <div id="lndBalanceResult"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:7000';
+const LND_API = 'http://localhost:5003';
+let token = localStorage.getItem('token');
+let user = null;
+
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  try {
+    const res = await fetch(`${API}/api${path}`, { ...opts, headers: { ...headers, ...opts.headers } });
+    return await res.json();
+  } catch (e) { return { success: false, error: { message: e.message } }; }
+}
+
+async function lndApi(path, opts = {}) {
+  try {
+    const res = await fetch(`${LND_API}${path}`, { ...opts, headers: { 'Content-Type': 'application/json', ...opts.headers } });
+    return await res.json();
+  } catch (e) { return { error: e.message }; }
+}
+
+function show(el, data) {
+  const pre = document.getElementById(el);
+  if (data && data.success !== false && !data.error) {
+    pre.className = 'success';
+  } else if (data && (data.error || data.success === false)) {
+    pre.className = 'error';
+  } else { pre.className = ''; }
+  pre.textContent = JSON.stringify(data, null, 2);
+}
+
+async function checkStatus() {
+  const badge = document.getElementById('statusBadge');
+  try {
+    const res = await fetch(`${API}/health`);
+    if (res.ok) { badge.innerHTML = '<span class="status-dot online"></span> Backend OK'; badge.style.borderColor = '#22c55e33'; }
+    else throw Error();
+  } catch {
+    badge.innerHTML = '<span class="status-dot offline"></span> Backend HS';
+    badge.style.borderColor = '#dc262633';
+  }
+}
+
+async function register() {
+  const username = document.getElementById('regUsername').value + Date.now();
+  const email = document.getElementById('regEmail').value || `u${Date.now()}@test.com`;
+  const password = document.getElementById('regPassword').value;
+  document.getElementById('regUsername').value = username;
+  const data = await api('/register', { method: 'POST', body: JSON.stringify({ username, email, password, phone: '+33600000000' }) });
+  show('regResult', data);
+  if (data.success) {
+    document.getElementById('loginEmail').value = email;
+    document.getElementById('loginPassword').value = password;
+  }
+}
+
+async function login() {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const data = await api('/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+  show('loginResult', data);
+  if (data.success) {
+    token = data.data.token;
+    user = data.data.user;
+    localStorage.setItem('token', token);
+    enterApp();
+  }
+}
+
+function logout() {
+  token = null;
+  user = null;
+  localStorage.removeItem('token');
+  document.getElementById('loginSection').style.display = 'grid';
+  document.getElementById('appSection').style.display = 'none';
+}
+
+async function enterApp() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('appSection').style.display = 'block';
+  await refreshMe();
+}
+
+async function refreshMe() {
+  if (!token) return;
+  const data = await api('/me');
+  if (data.success) {
+    user = data.data;
+    document.getElementById('displayUsername').textContent = `👤 ${user.username}`;
+    document.getElementById('displayBalance').textContent = `${Number(user.balance_sats).toLocaleString()} sats`;
+  }
+}
+
+const BOB_PAY_URL = 'http://10.76.233.29:3004';
+
+async function requestPayment() {
+  const amount = parseInt(document.getElementById('invAmount').value);
+  const description = document.getElementById('invDesc').value;
+  const data = await api('/request-payment', { method: 'POST', body: JSON.stringify({ amountSats: amount, description }) });
+  show('invResult', data);
+  if (data.success) {
+    const bolt11 = data.data.bolt11;
+    document.getElementById('payBolt11').value = bolt11;
+    const payUrl = `${BOB_PAY_URL}/?invoice=${encodeURIComponent(bolt11)}`;
+    document.getElementById('qrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(payUrl)}`;
+    document.getElementById('qrImg').alt = payUrl;
+    document.getElementById('qrSection').style.display = 'block';
+  }
+}
+
+function copyPayUrl() {
+  const url = document.getElementById('qrImg').alt;
+  navigator.clipboard.writeText(url).then(() => {
+    document.getElementById('qrHint').textContent = '✅ Lien copié!';
+    setTimeout(() => document.getElementById('qrHint').textContent = 'Toucher pour copier le lien', 2000);
+  }).catch(() => {});
+}
+
+async function checkPayment() {
+  const id = document.getElementById('checkPaymentId').value;
+  const data = await api(`/check-payment/${id}`);
+  show('checkResult', data);
+}
+
+async function sendPayment() {
+  const bolt11 = document.getElementById('payBolt11').value;
+  if (!bolt11) return show('payResult', { error: 'Colle une facture BOLT11' });
+  const data = await api('/send-payment', { method: 'POST', body: JSON.stringify({ paymentRequest: bolt11 }) });
+  show('payResult', data);
+  if (data.success) await refreshMe();
+}
+
+async function transfer() {
+  const to = document.getElementById('transferTo').value;
+  const amount = parseInt(document.getElementById('transferAmount').value);
+  const data = await api('/transfer', { method: 'POST', body: JSON.stringify({ toUsername: to, amountSats: amount }) });
+  show('transferResult', data);
+  if (data.success) await refreshMe();
+}
+
+async function getHistory() {
+  const data = await api('/history?limit=30');
+  if (!data.success) return show('historyResult', data);
+  const txs = data.data;
+  document.getElementById('historyCount').textContent = `${txs.length} transactions`;
+  let html = `<table>
+    <tr><th>Date</th><th>Type</th><th>Montant</th><th>Statut</th></tr>`;
+  for (const tx of txs) {
+    const date = new Date(tx.created_at).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+    const icon = tx.type === 'receive' ? '📥' : tx.type === 'send_external' ? '📤' : '🔄';
+    const label = tx.type === 'receive' ? 'Reçu' : tx.type === 'send_external' ? 'Envoyé' : tx.type === 'transfer_in' ? 'Transfert reçu' : tx.type === 'transfer_out' ? 'Transfert envoyé' : tx.type;
+    const sign = tx.type === 'receive' || tx.type === 'transfer_in' ? 'positive' : 'negative';
+    const prefix = sign === 'positive' ? '+' : '-';
+    const badge = `badge-${tx.status}`;
+    const statusLabel = tx.status === 'completed' ? '✅' : tx.status === 'pending' ? '⏳' : '❌';
+    html += `<tr>
+      <td style="white-space:nowrap">${date}</td>
+      <td>${icon} ${label}</td>
+      <td class="amount ${sign}">${prefix}${Number(tx.amount_sats).toLocaleString()} sats</td>
+      <td><span class="badge-pill ${badge}">${statusLabel} ${tx.status}</span></td>
+    </tr>`;
+  }
+  html += '</table>';
+  document.getElementById('historyResult').innerHTML = html;
+}
+
+async function lndGetInfo() {
+  const data = await lndApi('/api/getinfo');
+  if (data.error) return document.getElementById('lndInfoResult').innerHTML = `<div style="color:#f85149">❌ ${data.error}</div>`;
+  const info = data;
+  document.getElementById('lndInfoResult').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-item">
+        <div class="stat-label">Alias</div>
+        <div class="stat-value">${info.alias || '?'}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Version</div>
+        <div class="stat-value" style="font-size:14px">${info.version || '?'}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Hauteur de bloc</div>
+        <div class="stat-value">${info.current_block_height || 0}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Canaux actifs</div>
+        <div class="stat-value">${info.active_channels_count || 0}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Pairs connectés</div>
+        <div class="stat-value">${info.peers_count || 0}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Synchronisé</div>
+        <div class="stat-value" style="color:${info.is_synced_to_chain ? '#22c55e' : '#f0b429'}">${info.is_synced_to_chain ? '✅ Oui' : '⏳ Non'}</div>
+      </div>
+      <div class="stat-item full">
+        <div class="stat-label">Clé publique</div>
+        <div class="stat-value" style="font-size:11px">${info.public_key || '?'}</div>
+      </div>
+    </div>`;
+}
+
+async function lndBalance() {
+  const data = await lndApi('/api/balance');
+  if (data.error) return document.getElementById('lndBalanceResult').innerHTML = `<div style="color:#f85149">❌ ${data.error}</div>`;
+  const onChain = data.onChainBalance || {};
+  const offChain = data.offChainBalance || {};
+  const total = (parseInt(onChain.chain_balance || 0) + parseInt(offChain.channel_balance || 0));
+  document.getElementById('lndBalanceResult').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-item">
+        <div class="stat-label">Total</div>
+        <div class="stat-value" style="color:#f59e0b">${total.toLocaleString()} sats</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">On-chain</div>
+        <div class="stat-value">${(parseInt(onChain.chain_balance) || 0).toLocaleString()} sats</div>
+        <div class="stat-sub">${(parseInt(onChain.pending_chain_balance) || 0) > 0 ? `⏳ ${onChain.pending_chain_balance} en attente` : ''}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Canaux Lightning</div>
+        <div class="stat-value">${(parseInt(offChain.channel_balance) || 0).toLocaleString()} sats</div>
+        <div class="stat-sub">${(parseInt(offChain.pending_channel_balance) || 0) > 0 ? `⏳ ${offChain.pending_channel_balance} en attente` : ''}</div>
+      </div>
+    </div>`;
+}
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+// Init
+checkStatus();
+if (token) (async () => { const d = await api('/me'); if (d.success) { user = d.data; enterApp(); } else { token = null; localStorage.removeItem('token'); } })();
+setInterval(checkStatus, 10000);
+setInterval(refreshMe, 5000);
+</script>
+</body>
+</html>

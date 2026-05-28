@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Confirmer le paiement</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .card {
+    background: #161b22;
+    border-radius: 16px;
+    padding: 32px 24px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid #30363d;
+  }
+  .amount {
+    font-size: 48px;
+    font-weight: 700;
+    color: #58a6ff;
+    margin: 20px 0 8px;
+  }
+  .label { color: #8b949e; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+  .desc { color: #8b949e; font-size: 14px; margin: 8px 0 24px; word-break: break-all; }
+  .btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform .1s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-confirm {
+    background: #238636;
+    color: #fff;
+  }
+  .btn-confirm:disabled {
+    background: #21262d;
+    color: #484f58;
+    cursor: not-allowed;
+  }
+  .btn-confirm:hover:not(:disabled) { background: #2ea043; }
+  .status {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .status.pending { background: #1f2937; color: #f0b429; }
+  .status.success { background: #0f2e18; color: #3fb950; }
+  .status.error { background: #2d1b1b; color: #f85149; }
+  .hidden { display: none; }
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #30363d;
+    border-top-color: #58a6ff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .bolt11 {
+    font-size: 11px;
+    color: #484f58;
+    word-break: break-all;
+    margin-top: 16px;
+    padding: 8px;
+    background: #0d1117;
+    border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="label">Montant</div>
+  <div class="amount" id="amount">---</div>
+  <div class="label">Destination</div>
+  <div class="desc" id="destination">---</div>
+  <div id="descBox" class="desc hidden"><strong>Note:</strong> <span id="description"></span></div>
+  <button class="btn btn-confirm" id="confirmBtn" onclick="pay()">Confirmer le paiement</button>
+  <div id="status" class="status hidden"></div>
+  <div class="bolt11" id="bolt11"></div>
+</div>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const invoice = params.get('invoice');
+  const apiBase = window.location.origin;
+
+  if (!invoice) {
+    document.getElementById('amount').textContent = 'Erreur';
+    document.getElementById('destination').textContent = 'Aucune facture';
+    document.getElementById('confirmBtn').disabled = true;
+  } else {
+    document.getElementById('bolt11').textContent = invoice;
+    decodeInvoice(invoice);
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status ' + type;
+    el.classList.remove('hidden');
+  }
+
+  function decodeInvoice(bolt11) {
+    showStatus('Décodage...', 'pending');
+    fetch(apiBase + '/api/decode?invoice=' + encodeURIComponent(bolt11))
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          const tokens = d.data.tokens;
+          document.getElementById('amount').textContent = (tokens / 1000).toLocaleString() + ' sats';
+          document.getElementById('destination').textContent = d.data.destination.substring(0, 16) + '...';
+          document.getElementById('status').classList.add('hidden');
+        } else {
+          document.getElementById('amount').textContent = '? sats';
+          showStatus('Impossible de décoder', 'error');
+        }
+      })
+      .catch(() => {
+        document.getElementById('amount').textContent = '? sats';
+        showStatus('Erreur de décodage', 'error');
+      });
+  }
+
+  function pay() {
+    const btn = document.getElementById('confirmBtn');
+    btn.disabled = true;
+    btn.textContent = 'Paiement en cours...';
+    showStatus('Transaction en cours...', 'pending');
+
+    fetch(apiBase + '/api/pay', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invoice })
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        showStatus('✅ Paiement réussi !', 'success');
+        btn.textContent = '✅ Payé';
+      } else {
+        showStatus('❌ ' + (d.error || 'Échec du paiement'), 'error');
+        btn.disabled = false;
+        btn.textContent = 'Réessayer';
+      }
+    })
+    .catch(() => {
+      showStatus('❌ Erreur réseau', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Réessayer';
+    });
+  }
+</script>
+</body>
+</html>
