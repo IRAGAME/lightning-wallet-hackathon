@@ -24,6 +24,6 @@
     "ln-service": "^59.0.3"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.1.14"
   }
 }
