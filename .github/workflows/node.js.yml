@@ -1,0 +1,33 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install lightning-api
+        run: npm ci
+        working-directory: backends/lightning-api
+      - name: Install user-backend
+        run: npm ci
+        working-directory: backends/user-backend
+      - name: Lint and test
+        run: |
+          npm run lint --if-present
+          npm test --if-present
+        working-directory: backends/user-backend
