@@ -5,7 +5,7 @@
   "dependencies": {
     "express": "^4.21.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.0",
+    "dotenv": "^18.0.1",
     "ln-service": "^59.0.3",
     "lightning": "^9.0.0"
   }
